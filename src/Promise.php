@@ -4,6 +4,8 @@ namespace React\Promise;
 
 class Promise implements ExtendedPromiseInterface, CancellablePromiseInterface
 {
+    use TraceableTrait;
+
     private $canceller;
     private $result;
 
@@ -22,11 +24,13 @@ class Promise implements ExtendedPromiseInterface, CancellablePromiseInterface
         // in the stack trace in PHP 7+ only.
         $cb = $resolver;
         $resolver = $canceller = null;
+        $this->traceInstantiated();
         $this->call($cb);
     }
 
     public function then(callable $onFulfilled = null, callable $onRejected = null, callable $onProgress = null)
     {
+        $this->traceHandled();
         if (null !== $this->result) {
             return $this->result->then($onFulfilled, $onRejected, $onProgress);
         }
@@ -57,6 +61,7 @@ class Promise implements ExtendedPromiseInterface, CancellablePromiseInterface
 
     public function done(callable $onFulfilled = null, callable $onRejected = null, callable $onProgress = null)
     {
+        $this->traceHandled();
         if (null !== $this->result) {
             return $this->result->done($onFulfilled, $onRejected, $onProgress);
         }
@@ -102,6 +107,7 @@ class Promise implements ExtendedPromiseInterface, CancellablePromiseInterface
 
     public function cancel()
     {
+        $this->traceHandled();
         if (null === $this->canceller || null !== $this->result) {
             return;
         }
@@ -252,5 +258,10 @@ class Promise implements ExtendedPromiseInterface, CancellablePromiseInterface
             $target = null;
             $this->reject($e);
         }
+    }
+
+    public function __destruct()
+    {
+        $this->traceDestroyed();
     }
 }
