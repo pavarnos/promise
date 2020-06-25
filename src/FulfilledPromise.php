@@ -7,6 +7,8 @@ namespace React\Promise;
  */
 class FulfilledPromise implements ExtendedPromiseInterface, CancellablePromiseInterface
 {
+    use TraceableTrait;
+
     private $value;
 
     public function __construct($value = null)
@@ -16,6 +18,7 @@ class FulfilledPromise implements ExtendedPromiseInterface, CancellablePromiseIn
         }
 
         $this->value = $value;
+        $this->traceInstantiated();
     }
 
     public function then(callable $onFulfilled = null, callable $onRejected = null, callable $onProgress = null)
@@ -23,6 +26,8 @@ class FulfilledPromise implements ExtendedPromiseInterface, CancellablePromiseIn
         if (null === $onFulfilled) {
             return $this;
         }
+
+        $this->traceHandled();
 
         try {
             return resolve($onFulfilled($this->value));
@@ -35,6 +40,8 @@ class FulfilledPromise implements ExtendedPromiseInterface, CancellablePromiseIn
 
     public function done(callable $onFulfilled = null, callable $onRejected = null, callable $onProgress = null)
     {
+        $this->traceHandled();
+
         if (null === $onFulfilled) {
             return;
         }
@@ -48,6 +55,7 @@ class FulfilledPromise implements ExtendedPromiseInterface, CancellablePromiseIn
 
     public function otherwise(callable $onRejected)
     {
+        $this->traceHandled();
         return $this;
     }
 
@@ -67,5 +75,11 @@ class FulfilledPromise implements ExtendedPromiseInterface, CancellablePromiseIn
 
     public function cancel()
     {
+        $this->traceHandled();
+    }
+
+    public function __destruct()
+    {
+        $this->traceDestroyed();
     }
 }

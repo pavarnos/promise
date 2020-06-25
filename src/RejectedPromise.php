@@ -7,6 +7,8 @@ namespace React\Promise;
  */
 class RejectedPromise implements ExtendedPromiseInterface, CancellablePromiseInterface
 {
+    use TraceableTrait;
+
     private $reason;
 
     public function __construct($reason = null)
@@ -16,6 +18,7 @@ class RejectedPromise implements ExtendedPromiseInterface, CancellablePromiseInt
         }
 
         $this->reason = $reason;
+        $this->traceInstantiated($reason);
     }
 
     public function then(callable $onFulfilled = null, callable $onRejected = null, callable $onProgress = null)
@@ -23,6 +26,7 @@ class RejectedPromise implements ExtendedPromiseInterface, CancellablePromiseInt
         if (null === $onRejected) {
             return $this;
         }
+        $this->traceHandled();
 
         try {
             return resolve($onRejected($this->reason));
@@ -35,6 +39,7 @@ class RejectedPromise implements ExtendedPromiseInterface, CancellablePromiseInt
 
     public function done(callable $onFulfilled = null, callable $onRejected = null, callable $onProgress = null)
     {
+        $this->traceHandled();
         if (null === $onRejected) {
             throw UnhandledRejectionException::resolve($this->reason);
         }
@@ -75,5 +80,11 @@ class RejectedPromise implements ExtendedPromiseInterface, CancellablePromiseInt
 
     public function cancel()
     {
+        $this->traceHandled();
+    }
+
+    public function __destruct()
+    {
+        $this->traceDestroyed();
     }
 }
