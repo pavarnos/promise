@@ -50,6 +50,7 @@ class UnhandledRejectionTracer
         $hash = spl_object_hash($promise);
 
         if (!isset($this->promises[$hash])) {
+            // this should be a problem: we are handling a promise we have not instantiated()
             return;
         }
 
@@ -63,6 +64,11 @@ class UnhandledRejectionTracer
     public function destroyed(PromiseInterface $promise)
     {
         $hash = spl_object_hash($promise);
+
+        if (!isset($this->promises[$hash])) {
+            // destroying a promise we already handled
+            return;
+        }
 
         $this->notifyUnhandledPromise($this->promises[$hash]);
 
